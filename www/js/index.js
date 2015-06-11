@@ -21,35 +21,50 @@ function loadFromFile(){
 }
 
 function doImportSql(){
-    cordova.plugins.sqlitePorter.importSqlToDb(db, $('#result').val(), function(){
-        alert("Imported SQL to DB");
-    }, onError);
+    cordova.plugins.sqlitePorter.importSqlToDb(db, $('#result').val(), {
+        successFn: function(count){
+            alert("Imported "+count+" SQL statements to DB");
+        },
+        errorFn: onError
+    });
 }
 
 function doExportSql(){
-    cordova.plugins.sqlitePorter.exportDbToSql(db, function(sql){
-        $('#result').val(sql);
-        alert("Exported SQL from DB");
-    }, $('#export-type').val() === "data");
+    cordova.plugins.sqlitePorter.exportDbToSql(db, {
+        successFn: function(sql, count){
+            $('#result').val(sql);
+            alert("Exported "+count+" SQL statements to DB");
+        },
+        dataOnly: $('#export-type').val() === "data"
+    });
 }
 
 function doImportJson(){
-    cordova.plugins.sqlitePorter.importJsonToDb(db, $('#result').val(), function(){
-        alert("Imported JSON to DB");
-    }, onError);
+    cordova.plugins.sqlitePorter.importJsonToDb(db, $('#result').val(), {
+        successFn: function(count){
+            alert("Imported "+count+" JSON statements to DB");
+        },
+        errorFn: onError
+    });
 }
 
 function doExportJson(){
-    cordova.plugins.sqlitePorter.exportDbToJson(db, function(json){
-        $('#result').val(JSON.stringify(json));
-        alert("Exported JSON from DB");
-    }, $('#export-type').val() === "data");
+    cordova.plugins.sqlitePorter.exportDbToJson(db, {
+        successFn: function(json, count){
+            $('#result').val(JSON.stringify(json));
+            alert("Exported "+count+" JSON statements to DB");
+        },
+        dataOnly: $('#export-type').val() === "data"
+    });
 }
 
 function doWipe(){
-    cordova.plugins.sqlitePorter.wipeDb(db, function(){
-        alert("Wiped DB");
-    }, onError);
+    cordova.plugins.sqlitePorter.wipeDb(db, {
+        successFn: function(count){
+            alert("Wiped "+count+" tables");
+        },
+        errorFn: onError
+    });
 }
 
 function onError(error){
