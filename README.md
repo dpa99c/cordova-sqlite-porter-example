@@ -30,7 +30,7 @@ There's [another example project](https://github.com/dpa99c/cordova-sqlite-porte
 For example, to run on the Android platform, execute the following commands from the project root:
 
 - Install the Android platform: `$ cordova platform add android`
-- Add the sqlite-porter plugin to the platform: `$ cordova plugin add cordova-sqlite-porter`
+- Add the sqlite-porter plugin to the platform: `$ cordova plugin uk.co.workingedge.cordova.plugin.sqliteporter`
 - Build and run the project: `$ cordova run android`
 
 
