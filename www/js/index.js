@@ -1,6 +1,9 @@
 var db, text, searchTable;
 
 function onDeviceReady(){
+    // Init performance API
+    Performance.init();
+
     // Open WebSQL DB
     db = window.openDatabase("Test", "1.0", "TestDB", 1 * 1024);
 
