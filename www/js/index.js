@@ -139,7 +139,8 @@ function doSearch(e){
             function (tx, rslt) {
                 if (rslt.rows && rslt.rows.length > 0) {
                    for(var i=0; i<rslt.rows.length; i++){
-                       results += "Id="+rslt.rows[i].AlbumId+"; Title="+rslt.rows[i].Title+"\n";
+                       var row = rslt.rows.item(i);
+                       results += "Id="+row.AlbumId+"; Title="+row.Title+"\n";
                    }
                 }else{
                     results = "[No results]";

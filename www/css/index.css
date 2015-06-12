@@ -3,7 +3,8 @@
 }
 
 #text{
-    min-height: 400px
+    min-height: 400px;
+    overflow-y: scroll;
 }
 
 
@@ -36,4 +37,5 @@
 
 #search-results{
     min-height: 300px;
+    overflow-y: scroll;
 }
