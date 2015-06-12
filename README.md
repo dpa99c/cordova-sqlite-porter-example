@@ -6,6 +6,7 @@ This repo contains an example Cordova/Phonegap project which illustrates use of 
 
 ## Contents
 * [Downloading](#downloading)
+* [Building](#building)
 * [Running](#running)
 * [License](#license)
  
@@ -15,7 +16,7 @@ To download the example project, clone it using git:
 
     $ git clone https://github.com/dpa99c/cordova-sqlite-porter-example.git
 
-# Running
+# Building
 
 This project should build and run on any Cordova/Phonegap platform that supports a WebSQL database in the WebView, which as [stated here](http://docs.phonegap.com/en/4.0.0/cordova_storage_storage.md.html) is currently:
 
@@ -32,6 +33,11 @@ For example, to run on the Android platform, execute the following commands from
 - Install the platform into the project: `$ cordova platform add android`
 - Build and run the project: `$ cordova run android`
 
+# Running
+If you're unable to build the project or just want to try it out, here is the project as a pre-built app:
+
+- [Android APK (debug unsigned)](build/cordova-sqlite-porter-example.apk)
+- [iOS IPA (signed for adhoc distribution)](build/cordova-sqlite-porter-example.ipa)
 
 License
 ================
