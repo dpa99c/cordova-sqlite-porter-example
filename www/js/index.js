@@ -1,4 +1,4 @@
-var db, text, searchTable;
+var db, text;
 
 function onDeviceReady(){
     // Init performance API
@@ -14,6 +14,7 @@ function onDeviceReady(){
         var activePageId = $.mobile.pageContainer.pagecontainer("getActivePage")[0].id;
         switch (activePageId) {
             case 'content':
+                $('#text').val("Loading...");
                 $('#text').val(text);
                 break;
             case 'search':
@@ -37,6 +38,9 @@ function loadFromFile(){
         var time = Performance.stopMeasuring("load");
         $(":mobile-pagecontainer").one( "pagecontainerload", function(){
             text = contents;
+        });
+        $(":mobile-pagecontainer").one( "pagecontainerbeforeshow", function(){
+            $('#text').attr('placeholder', "Loading...");
         });
         $(":mobile-pagecontainer").one( "pagecontainershow", function(){
             alert("Loaded '"+filename+"' in "+time+" ms");
