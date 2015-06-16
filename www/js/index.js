@@ -92,7 +92,8 @@ function doImportJson(){
         errorFn: onError,
         progressFn: function(current, total){
             $.mobile.loading("show", {text: "Imported "+current+"/"+total, textVisible: true});
-        }
+        },
+        batchInsertSize: 250
     });
 }
 
