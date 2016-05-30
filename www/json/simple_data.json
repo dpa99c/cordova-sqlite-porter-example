@@ -10,6 +10,12 @@
           "AlbumId":"6",
           "Title":"Jane (inserted)"
         }
+      ],
+      "t_Track-Details":[
+        {
+          "c_Track-Id":"2",
+          "Name":"Another name"
+        }
       ]
     },
     "updates":{

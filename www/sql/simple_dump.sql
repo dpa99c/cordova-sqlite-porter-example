@@ -6,3 +6,6 @@ INSERT OR REPLACE INTO Album(AlbumId,Title) VALUES ('2','Bob');
 INSERT OR REPLACE INTO Album(AlbumId,Title) VALUES ('3','Tom');
 INSERT OR REPLACE INTO Album(AlbumId,Title) VALUES ('4','Dick');
 INSERT OR REPLACE INTO Album(AlbumId,Title) VALUES ('5','Harry');
+DROP TABLE IF EXISTS `t_Track-Details`;
+CREATE TABLE `t_Track-Details` ([c_Track-Id] PRIMARY KEY, [Name]);
+INSERT OR REPLACE INTO `t_Track-Details`(`c_Track-Id`,Name) VALUES ('1','Some name');

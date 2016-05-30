@@ -1,7 +1,8 @@
 {
   "structure":{
     "tables":{
-      "Album":"([AlbumId] PRIMARY KEY, [Title])"
+      "Album":"([AlbumId] PRIMARY KEY, [Title])",
+      "t_Track-Details":"([c_Track-Id] PRIMARY KEY, [Name])"
     },
     "otherSQL": [
       "CREATE UNIQUE INDEX Album_ID ON Album(AlbumId)"
@@ -29,6 +30,12 @@
         {
           "AlbumId":"5",
           "Title":"Harry"
+        }
+      ],
+      "t_Track-Details":[
+        {
+          "c_Track-Id":"1",
+          "Name":"Some name"
         }
       ]
     }
