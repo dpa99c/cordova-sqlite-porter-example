@@ -77,7 +77,8 @@ function doExportSql(){
             });
             $(":mobile-pagecontainer").pagecontainer( "change", "content.html");
         },
-        dataOnly: $('#export-type').val() === "data"
+        dataOnly: $('#export-type').val() === "data",
+        structureOnly: $('#export-type').val() === "structure"
     });
 }
 
@@ -110,7 +111,8 @@ function doExportJson(){
             });
             $(":mobile-pagecontainer").pagecontainer( "change", "content.html");
         },
-        dataOnly: $('#export-type').val() === "data"
+        dataOnly: $('#export-type').val() === "data",
+        structureOnly: $('#export-type').val() === "structure"
     });
 }
 
