@@ -1,127 +1,96 @@
-var db, text;
+var db, source;
+var testCount = 0;
+var MAX = 20;
+var lastImportCount, lastExportCount, lastExportResult;
 
 function onDeviceReady(){
-    // Init performance API
-    Performance.init();
-
     // Open WebSQL DB
     db = window.openDatabase("Test", "1.0", "TestDB", 1 * 1024);
-
-    // First page is load
-    $(":mobile-pagecontainer").pagecontainer( "change", "load.html");
-
-    $(":mobile-pagecontainer").on( "pagecontainershow", function(){
-        var activePageId = $.mobile.pageContainer.pagecontainer("getActivePage")[0].id;
-        switch (activePageId) {
-            case 'content':
-                $('#text').val("Loading...");
-                $('#text').val(text);
-                break;
-            case 'search':
-                $('form').on("submit", doSearch);
-                break;
-            default:
-        }
-    });
+    loadFromFile(runTest);
 }
 
-function loadFromFile(){
-    var dbName = $('#db-name').val();
-    var format = $('#format').val();
-    var type = $('#type').val();
+var runTest; runTest = function(){
+    testCount++;
+    if(testCount > MAX){
+        return testComplete();
+    }
+
+    doWipe(function(){
+        doImportJson(function(count){
+            if(lastImportCount && lastImportCount !== count){
+                console.error("Import count mismatch");
+                return testFailed();
+            }
+            lastImportCount = count;
+
+            doExportJson(function(result, count){
+                if(lastExportCount && lastExportCount !== count){
+                    console.error("Export count mismatch");
+                    return testFailed();
+                }
+                lastExportCount = count;
+
+                if(lastExportResult && lastExportResult !== result){
+                    console.error("Export result mismatch");
+                    return testFailed();
+                }
+                lastExportResult = result;
+                runTest(); // recurse
+            });
+        });
+    });
+};
+
+function testComplete(){
+    alert("Test PASSED: "+MAX+" repetitions");
+}
+
+function testFailed(){
+    alert("Test FAILED");
+}
+
+function loadFromFile(done){
+    var dbName = "complex";
+    var format = "json";
+    var type = "dump";
 
     var filename = format+"/"+dbName+"_"+type+"."+format;
 
-    $('#text').val("Loading "+filename+"...");
-    Performance.startMeasuring("load");
     $.get(filename, function(contents){
-        var time = Performance.stopMeasuring("load");
-        $(":mobile-pagecontainer").one( "pagecontainerload", function(){
-            text = contents;
-        });
-        $(":mobile-pagecontainer").one( "pagecontainerbeforeshow", function(){
-            $('#text').attr('placeholder', "Loading...");
-        });
-        $(":mobile-pagecontainer").one( "pagecontainershow", function(){
-            alert("Loaded '"+filename+"' in "+time+" ms");
-        });
-        $(":mobile-pagecontainer").pagecontainer( "change", "content.html");
+        source = contents;
+        done();
     }, "text");
 }
 
-function doImportSql(){
-    Performance.startMeasuring("import_sql");
-    cordova.plugins.sqlitePorter.importSqlToDb(db, text, {
+
+function doImportJson(done){
+    cordova.plugins.sqlitePorter.importJsonToDb(db, source, {
         successFn: function(count){
-            var time = Performance.stopMeasuring("import_sql");
-            $.mobile.loading("hide");
-            alert("Imported "+count+" SQL statements to DB in "+time+" ms");
+            log("Imported "+count+" JSON statements to DB");
+            done(count);
         },
         errorFn: onError,
-        progressFn: function(current, total){
-            $.mobile.loading("show", {text: "Imported "+current+"/"+total, textVisible: true});
-        }
-    });
-}
-
-function doExportSql(){
-    Performance.startMeasuring("export_sql");
-    cordova.plugins.sqlitePorter.exportDbToSql(db, {
-        successFn: function(sql, count){
-            var time = Performance.stopMeasuring("export_sql");
-            $(":mobile-pagecontainer").one( "pagecontainerload", function(){
-                text = sql;
-            });
-            $(":mobile-pagecontainer").one( "pagecontainershow", function(){
-                alert("Exported "+count+" SQL statements to DB in "+time+" ms");
-            });
-            $(":mobile-pagecontainer").pagecontainer( "change", "content.html");
-        },
-        dataOnly: $('#export-type').val() === "data",
-        structureOnly: $('#export-type').val() === "structure"
-    });
-}
-
-function doImportJson(){
-    Performance.startMeasuring("import_json");
-    cordova.plugins.sqlitePorter.importJsonToDb(db, text, {
-        successFn: function(count){
-            var time = Performance.stopMeasuring("import_json");
-            $.mobile.loading("hide");
-            alert("Imported "+count+" JSON statements to DB in "+time+" ms");
-        },
-        errorFn: onError,
-        progressFn: function(current, total){
-            $.mobile.loading("show", {text: "Imported "+current+"/"+total, textVisible: true});
-        },
         batchInsertSize: 250
     });
 }
 
-function doExportJson(){
-    Performance.startMeasuring("export_json");
+function doExportJson(done){
     cordova.plugins.sqlitePorter.exportDbToJson(db, {
         successFn: function(json, count){
-            var time = Performance.stopMeasuring("export_json");
-            $(":mobile-pagecontainer").one( "pagecontainerload", function(){
-                text = JSON.stringify(json);
-            });
-            $(":mobile-pagecontainer").one( "pagecontainershow", function(){
-                alert("Exported "+count+" JSON statements to DB in "+time+" ms");
-            });
-            $(":mobile-pagecontainer").pagecontainer( "change", "content.html");
+            log("Exported "+count+" JSON statements from DB");
+            var result = JSON.stringify(json);
+            done(result, count);
         },
-        dataOnly: $('#export-type').val() === "data",
-        structureOnly: $('#export-type').val() === "structure"
+        dataOnly: false,
+        structureOnly: false
     });
 }
 
-function doWipe(){
-    Performance.startMeasuring("wipe");
+function doWipe(done){
     cordova.plugins.sqlitePorter.wipeDb(db, {
-        successFn: function(count){
-            var time = Performance.stopMeasuring("wipe");
-            alert("Wiped "+count+" tables in "+time+" ms");
+        successFn: function(){
+            log("Wiped DB");
+            done();
         },
         errorFn: onError
     });
@@ -132,36 +101,17 @@ function onError(error){
     if(error.code){
         msg += "; code="+error.code;
     }
+    console.error(msg);
     console.dir(error);
-    alert(msg);
+    log(msg);
+    testFailed();
 }
 
-function doSearch(e){
-    e.preventDefault();
-    var term = $('#search-box').val();
-    $('#search-results').val('');
-    if(!term){
-        return;
-    }
-    var results = "";
-    db.transaction(function(tx) {
-        tx.executeSql('SELECT * FROM Album WHERE ([Title] LIKE "%'+term+'%")', [],
-            function (tx, rslt) {
-                if (rslt.rows && rslt.rows.length > 0) {
-                   for(var i=0; i<rslt.rows.length; i++){
-                       var row = rslt.rows.item(i);
-                       results += "Id="+row.AlbumId+"; Title="+row.Title+"\n";
-                   }
-                }else{
-                    results = "[No results]";
-                }
-                $('#search-results').val(results);
-            },
-            function(tx, error){
-                onError(error);
-            }
-        );
-    });
+function log(msg){
+    msg = testCount + ": " + msg;
+    console.log(msg);
+    $('body').append('<p>'+msg+'</p>');
+    $('body').scrollTop($('body')[0].scrollHeight);
 }
 
 $(document).on('deviceready', onDeviceReady);
