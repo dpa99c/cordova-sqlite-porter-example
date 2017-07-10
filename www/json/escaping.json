@@ -1,0 +1,29 @@
+{
+  "structure":{
+    "tables":{
+      "Album":"([AlbumId] PRIMARY KEY, [Title])"
+    }
+  },
+  "data":{
+    "inserts":{
+      "Album":[
+        {
+          "AlbumId":"1",
+          "Title":"''&\""
+        },
+        {
+          "AlbumId":"2",
+          "Title":"This has \n new lines \n\r"
+        },
+        {
+          "AlbumId":"3",
+          "Title":"This has \t tabs \t"
+        },
+        {
+          "AlbumId":"4",
+          "Title":"This has 'single quotes', \n new lines & \"double quotes\"\n\r "
+        }
+      ]
+    }
+  }
+}

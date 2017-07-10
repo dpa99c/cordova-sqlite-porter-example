@@ -1,114 +1,153 @@
-var db, source;
-var testCount = 0;
-var MAX = 20;
-var lastImportCount, lastExportCount, lastExportResult;
+var db, origJSON, origSQL;
 
 function onDeviceReady(){
     // Open WebSQL DB
     db = window.openDatabase("Test", "1.0", "TestDB", 1 * 1024);
-    loadFromFile(runTest);
+
+    testJSON("escaping", function(){
+        testSQL("escaping", function(){
+            testJSON("complex_dump", function(){
+                testSQL("complex_dump", function(){
+                    testComplete();
+                })
+            });
+        })
+    });
 }
 
-var runTest; runTest = function(){
-    testCount++;
-    if(testCount > MAX){
-        return testComplete();
-    }
-
+function testJSON(testName, done){
     doWipe(function(){
-        doImportJson(function(count){
-            if(lastImportCount && lastImportCount !== count){
-                console.error("Import count mismatch");
-                return testFailed();
-            }
-            lastImportCount = count;
-
-            doExportJson(function(result, count){
-                if(lastExportCount && lastExportCount !== count){
-                    console.error("Export count mismatch");
-                    return testFailed();
-                }
-                lastExportCount = count;
-
-                if(lastExportResult && lastExportResult !== result){
-                    console.error("Export result mismatch");
-                    return testFailed();
-                }
-                lastExportResult = result;
-                runTest(); // recurse
+        loadFromFile(testName, "json", function(source){
+            origJSON = source;
+            doImportJson(source, function(){
+                doExportJson(function(result){
+                    if(normaliseJson(result) === normaliseJson(origJSON)){
+                        log("Exported JSON exactly matches imported JSON");
+                        done();
+                    }else{
+                        fail("Exported JSON doesn't match imported JSON");
+                        console.log("result: "+normaliseJson(result));
+                        console.log("orig: "+normaliseJson(origJSON));
+                    }
+                });
             });
         });
     });
-};
+}
+
+function testSQL(testName, done){
+    doWipe(function(){
+        loadFromFile(testName, "sql", function(source){
+            origSQL = source;
+            doImportSql(source, function(){
+                doExportSql(function(result){
+                    if(normaliseSql(result) === normaliseSql(origSQL)){
+                        log("Exported SQL exactly matches imported SQL");
+                        done();
+                    }else{
+                        fail("Exported SQL doesn't match imported SQL");
+                        console.log("result: "+normaliseSql(result));
+                        console.log("orig: "+normaliseSql(origSQL));
+                    }
+                });
+            });
+        });
+    });
+}
 
 function testComplete(){
-    alert("Test PASSED: "+MAX+" repetitions");
+    $('body').css('background-color', 'green');
+    setTimeout(function(){
+        alert("Test PASSED");
+    },100);
 }
 
 function testFailed(){
-    alert("Test FAILED");
+    $('body').css('background-color', 'red');
+    setTimeout(function(){
+        alert("Test FAILED");
+    },100);
 }
 
-function loadFromFile(done){
-    var dbName = "complex";
-    var format = "json";
-    var type = "dump";
-
-    var filename = format+"/"+dbName+"_"+type+"."+format;
-
-    $.get(filename, function(contents){
-        source = contents;
-        done();
-    }, "text");
+function loadFromFile(testName, type, done){
+    var filename = type+"/"+testName+"."+type;
+    $.get(filename, done, "text");
 }
 
-
-function doImportJson(done){
+function doImportJson(source, done){
     cordova.plugins.sqlitePorter.importJsonToDb(db, source, {
-        successFn: function(count){
-            log("Imported "+count+" JSON statements to DB");
-            done(count);
-        },
-        errorFn: onError,
-        batchInsertSize: 250
-    });
-}
-
-function doExportJson(done){
-    cordova.plugins.sqlitePorter.exportDbToJson(db, {
-        successFn: function(json, count){
-            log("Exported "+count+" JSON statements from DB");
-            var result = JSON.stringify(json);
-            done(result, count);
-        },
-        dataOnly: false,
-        structureOnly: false
-    });
-}
-
-function doWipe(done){
-    cordova.plugins.sqlitePorter.wipeDb(db, {
         successFn: function(){
-            log("Wiped DB");
             done();
         },
         errorFn: onError
     });
 }
 
+function doExportJson(done){
+    cordova.plugins.sqlitePorter.exportDbToJson(db, {
+        successFn: function(json){
+            var result = JSON.stringify(json);
+            done(result);
+        },
+        dataOnly: false,
+        structureOnly: false
+    });
+}
+
+function normaliseJson(json){
+    return JSON.stringify(JSON.parse(json));
+}
+
+function doImportSql(source, done){
+    cordova.plugins.sqlitePorter.importSqlToDb(db, source, {
+        successFn: function(){
+            done();
+        },
+        errorFn: onError
+    });
+}
+
+function doExportSql(done){
+    cordova.plugins.sqlitePorter.exportDbToSql(db, {
+        successFn: function(result){
+            done(result);
+        },
+        dataOnly: false,
+        structureOnly: false
+    });
+}
+
+function normaliseSql(sql){
+    return sql
+        .replace(/(?:\/\*(?:[\s\S]*?)\*\/)|(?:([\s;])+\/\/(?:.*)$)/gm,"") // strip out comments
+        .replace(/[\n\r]/g,''); // strip line breaks for comparison
+}
+
+function doWipe(done){
+    cordova.plugins.sqlitePorter.wipeDb(db, {
+        successFn: function(){
+            done();
+        },
+        errorFn: onError
+    });
+}
+
+function fail(reason){
+    console.error(reason);
+    log(reason);
+    testFailed();
+}
+
 function onError(error){
+    console.dir(error);
     var msg = "An error occurred: message="+error.message;
     if(error.code){
         msg += "; code="+error.code;
     }
-    console.error(msg);
-    console.dir(error);
-    log(msg);
-    testFailed();
+    fail(msg);
 }
 
 function log(msg){
-    msg = testCount + ": " + msg;
     console.log(msg);
     $('body').append('<p>'+msg+'</p>');
     $('body').scrollTop($('body')[0].scrollHeight);
